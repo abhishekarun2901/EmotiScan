@@ -15,38 +15,19 @@ EmotiScan is a web-based application built to provide real-time emotion detectio
 ✅ Therapist Collaboration Tools – Helps in tracking emotional patterns over time  
 
 
-# ⚙️ Installation & Setup
-## 1️⃣ Clone the Repository
+#  Installation & Setup
+##  Clone the Repository
 ```
 git clone https://github.com/your-username/EmotiScan.git
 cd EmotiScan
 ```
-## 2️⃣ Backend Setup (Flask)  
-### Install Dependencies  
-```
-cd backend
-pip install -r requirements.txt
-```
-### Run the Backend Server
-```
-python app.py
-```
-## 3️⃣ Frontend Setup (React.js)  
-### Install Dependencies  
-```
-cd frontend
-npm install
-```
-### Run the Frontend  
-```
-npm start
-```
+
 #  How It Works
 1. User uploads an image or uses a webcam.  
 2. System detects facial emotions using a CNN model.  
 3. Grad-CAM highlights important facial regions influencing the prediction.  
 4. Results are displayed with emotion labels and confidence scores.     
-## 🧪 Running Tests
+##  Running Tests
 ### To run backend unit tests:  
 ```cd backend
 pytest tests/
