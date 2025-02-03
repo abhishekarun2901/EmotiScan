@@ -4,15 +4,15 @@ EmotiScan is a web-based application built to provide real-time emotion detectio
 
 
 #  Features
-✅ Real-Time Emotion Detection – Detects emotions from images or webcam input  
+   Real-Time Emotion Detection – Detects emotions from images or webcam input  
 
-✅ Explainability with Grad-CAM – Highlights facial regions influencing the decision 
+   Explainability with Grad-CAM – Highlights facial regions influencing the decision 
 
-✅ User-Friendly Web Interface – Built with React.js for accessibility  
+   User-Friendly Web Interface – Built with React.js for accessibility  
 
-✅ Multi-Language Support – Expands accessibility for a global audience  
+   Multi-Language Support – Expands accessibility for a global audience  
 
-✅ Therapist Collaboration Tools – Helps in tracking emotional patterns over time  
+   Therapist Collaboration Tools – Helps in tracking emotional patterns over time  
 
 
 #  Installation & Setup
@@ -37,9 +37,9 @@ pytest tests/
 npm test
 ```
 #  Future Improvements
-✅ Support for more emotions beyond FER2013’s seven categories  
-✅ Integration with wearable devices for emotion tracking  
-✅ Personalized emotion analytics for long-term behavior analysis 
+   Support for more emotions beyond FER2013’s seven categories  
+   Integration with wearable devices for emotion tracking  
+   Personalized emotion analytics for long-term behavior analysis 
 
 #  Contributing
 1. Fork the repository  
