@@ -27,15 +27,7 @@ cd EmotiScan
 2. System detects facial emotions using a CNN model.  
 3. Grad-CAM highlights important facial regions influencing the prediction.  
 4. Results are displayed with emotion labels and confidence scores.     
-##  Running Tests
-### To run backend unit tests:  
-```cd backend
-pytest tests/
-```
-### To run frontend tests:
-```cd frontend
-npm test
-```
+
 #  Future Improvements
    Support for more emotions beyond FER2013’s seven categories  
    Integration with wearable devices for emotion tracking  
