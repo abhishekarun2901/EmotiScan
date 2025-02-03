@@ -3,7 +3,7 @@
 EmotiScan is a web-based application built to provide real-time emotion detection through facial expressions, aimed primarily at assisting individuals with autism, alexithymia, or anyone who faces difficulty recognizing emotions. By integrating Convolutional Neural Networks (CNNs) with Explainable AI (Grad-CAM), EmotiScan allows users to understand why certain emotions are detected, enhancing transparency and trust in the system.
 
 
-# 🚀 Features
+#  Features
 ✅ Real-Time Emotion Detection – Detects emotions from images or webcam input  
 
 ✅ Explainability with Grad-CAM – Highlights facial regions influencing the decision 
@@ -41,7 +41,7 @@ npm install
 ```
 npm start
 ```
-# 🖼️ How It Works
+#  How It Works
 1. User uploads an image or uses a webcam.  
 2. System detects facial emotions using a CNN model.  
 3. Grad-CAM highlights important facial regions influencing the prediction.  
@@ -55,22 +55,22 @@ pytest tests/
 ```cd frontend
 npm test
 ```
-# 📌 Future Improvements
+#  Future Improvements
 ✅ Support for more emotions beyond FER2013’s seven categories  
 ✅ Integration with wearable devices for emotion tracking  
 ✅ Personalized emotion analytics for long-term behavior analysis 
 
-# 🤝 Contributing
+#  Contributing
 1. Fork the repository  
 2. Create a new branch (feature-xyz)  
 3. Commit changes (git commit -m "Add new feature")  
 4. Push to GitHub (git push origin feature-xyz)  
 5. Submit a Pull Request  
 
-# 📜 License
+#  License
 This project is licensed under the MIT License – see LICENSE for details.  
 
-## 🚀 *Star this repo if you find it useful!* ⭐
+##  *Star this repo if you find it useful!* 
 
 
 
