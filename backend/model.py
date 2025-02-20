@@ -1,29 +1,20 @@
-from tensorflow.keras.models import model_from_json
-from tensorflow.python.keras.backend import set_session
+import cv2
 import numpy as np
+from tensorflow.keras.models import load_model
 
-import tensorflow as tf
+# Load the pre-trained model
+model = load_model('path_to_model.h5')  # Ensure this path is correct
 
+def preprocess_image(image):
+    # Resize image to match model input size, convert to grayscale, normalize
+    resized = cv2.resize(image, (48, 48))
+    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    normalized = gray / 255.0
+    return normalized.reshape(-1, 48, 48, 1)
 
-
-class FacialExpressionModel(object):
-
-    EMOTIONS_LIST = ["Angry", "Disgust",
-                     "Fear", "Happy",
-                     "Neutral", "Sad",
-                     "Surprise"]
-
-    def __init__(self, model_json_file, model_weights_file):
-        # load model from JSON file
-        with open(model_json_file, "r") as json_file:
-            loaded_model_json = json_file.read()
-            self.loaded_model = model_from_json(loaded_model_json)
-
-        # load weights into the new model
-        self.loaded_model.load_weights(model_weights_file)
-        #self.loaded_model.compile()
-        #self.loaded_model._make_predict_function()
-
-    def predict_emotion(self, img):
-        self.preds = self.loaded_model.predict(img)
-        return FacialExpressionModel.EMOTIONS_LIST[np.argmax(self.preds)]
+def emotion_predict(frame):
+    processed = preprocess_image(frame)
+    prediction = model.predict(processed)
+    emotion = np.argmax(prediction)
+    emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+    return emotions[emotion]
