@@ -1,87 +1,142 @@
-/* Apply background image with overlay */
+/* General Styles */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: url("https://source.unsplash.com/1600x900/?technology,abstract") no-repeat center center fixed;
-    background-size: cover;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: url("https://source.unsplash.com/1600x900/?technology,abstract") no-repeat center center/cover;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
 }
 
-/* Dark overlay for better text readability */
+/* Container */
 .container {
-    text-align: center;
-    padding: 40px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    min-height: 100vh;
+  background: rgba(0, 0, 0, 0.7); /* Dark overlay effect */
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 80%;
+  max-width: 600px;
 }
 
 /* Title */
 .title {
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 20px;
+  font-size: 36px;
+  font-weight: bold;
+  color: white; /* EmotiScan title stays white */
+  text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.4);
 }
 
-/* Center content */
-.content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    flex-wrap: wrap;
+/* Toggle Buttons */
+.toggle-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
-/* Webcam and Upload Box */
-.box {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.toggle-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  margin: 5px;
+  transition: 0.3s;
+  background: gray;
+  color: white;
 }
 
-/* Webcam Styling */
+.toggle-btn.active {
+  background: #007BFF;
+}
+
+/* Webcam */
 .webcam {
-    width: 320px;
-    height: 240px;
-    border: 2px solid white;
-    margin-bottom: 10px;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
 }
 
-/* Button Styling */
+/* Buttons */
 .btn {
-    padding: 12px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    background: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: 0.3s;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  transition: 0.3s;
+  text-decoration: none;
+  display: inline-block;
+  color: white;
 }
+
+/* Button Colors */
+.start-btn { background: #007BFF; }
+.request-btn { background: #28a745; }
+.results-btn { background: white; color: black; display: block; margin: 15px auto; }
+.home-btn { background: white; color: black; }
 
 .btn:hover {
-    background: #0056b3;
+  opacity: 0.8;
+  transform: scale(1.05);
 }
 
-/* File Input */
+/* File Upload Button */
 .file-input {
-    display: block;
-    margin: 10px auto;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
 }
 
-/* Results Box */
+.file-input:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Results */
 .results-box {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    display: inline-block;
-    border-radius: 10px;
-    font-size: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 18px;
+  margin-top: 10px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .content {
-        flex-direction: column;
-    }
+/* Emotion Score Bar */
+.emotion-container {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.emotion-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.progress-bar {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 20px;
+}
+
+.progress {
+  height: 100%;
+  background: #00A8FF;
+  text-align: right;
+  padding-right: 10px;
+  color: white;
+  font-weight: bold;
+  line-height: 20px;
+  border-radius: 10px;
 }
