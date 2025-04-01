@@ -12,6 +12,11 @@ function EmotionRecognitionApp() {
   const fileInputRef = useRef(null);
   const blazeface = require('@tensorflow-models/blazeface')
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [gradcamImage, setGradcamImage] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [explanationText, setExplanationText] = useState("");
+  const [detectedEmotion, setDetectedEmotion] = useState("Neutral");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Load blazeface model
   const runFaceDetectorModel = async () => {
@@ -19,7 +24,7 @@ function EmotionRecognitionApp() {
     console.log("FaceDetection Model is Loaded..")
     setInterval(() => {
       detect(model);
-    }, 100);
+    }, 1000); // Reduced frequency to once per second to avoid overwhelming the server
   }
 
   // Handle image upload
@@ -29,12 +34,22 @@ function EmotionRecognitionApp() {
       const reader = new FileReader();
       reader.onload = (e) => {
         setUploadedImage(e.target.result);
+        setGradcamImage(null);  // Clear previous GradCAM when new image is uploaded
+        setShowExplanation(false);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  // Toggle explanation view
+  const toggleExplanation = () => {
+    setShowExplanation(!showExplanation);
+  };
+
   const detect = async (net) => {
+    // If already processing, skip this cycle
+    if (isProcessing) return;
+    
     let imageToDetect;
     let videoWidth, videoHeight;
 
@@ -67,45 +82,117 @@ function EmotionRecognitionApp() {
     canvasRef.current.height = videoHeight;
 
     // Make Detections
-    const face = await net.estimateFaces(imageToDetect);
+    try {
+      setIsProcessing(true);
+      const face = await net.estimateFaces(imageToDetect);
 
-    // Websocket communication
-    var socket = new WebSocket('ws://localhost:8000')
-    var imageSrc = uploadedImage || webcamRef.current.getScreenshot();
-    var apiCall = {
-      event: "localhost:subscribe",
-      data: { 
-        image: imageSrc
-      },
-    };
-    socket.onopen = () => socket.send(JSON.stringify(apiCall))
-    socket.onmessage = function(event) {
-      var pred_log = JSON.parse(event.data)
-      document.getElementById("Angry").value = Math.round(pred_log['predictions']['angry']*100)
-      document.getElementById("Neutral").value = Math.round(pred_log['predictions']['neutral']*100)
-      document.getElementById("Happy").value = Math.round(pred_log['predictions']['happy']*100)
-      document.getElementById("Fear").value = Math.round(pred_log['predictions']['fear']*100)
-      document.getElementById("Surprise").value = Math.round(pred_log['predictions']['surprise']*100)
-      document.getElementById("Sad").value = Math.round(pred_log['predictions']['sad']*100)
-      document.getElementById("Disgust").value = Math.round(pred_log['predictions']['disgust']*100)
-
-      document.getElementById("emotion_text").value = pred_log['emotion']
-
-      // Get canvas context
-      const ctx = canvasRef.current.getContext("2d");
+      // Websocket communication
+      const socket = new WebSocket('ws://localhost:8000');
+      const imageSrc = uploadedImage || webcamRef.current.getScreenshot();
+      const apiCall = {
+        event: "localhost:subscribe",
+        data: { 
+          image: imageSrc
+        },
+      };
       
-      // Draw uploaded image or video frame
-      if (uploadedImage) {
-        const img = new Image();
-        img.src = uploadedImage;
-        ctx.drawImage(img, 0, 0, videoWidth, videoHeight);
-      }
+      // Set a timeout for the WebSocket connection
+      const socketTimeout = setTimeout(() => {
+        if (socket.readyState === WebSocket.CONNECTING) {
+          console.log("⚠️ WebSocket connection timeout");
+          socket.close();
+          setIsProcessing(false);
+        }
+      }, 5000);
+      
+      socket.onopen = () => {
+        clearTimeout(socketTimeout);
+        socket.send(JSON.stringify(apiCall));
+      };
+      
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setIsProcessing(false);
+      };
+      
+      socket.onmessage = function(event) {
+        try {
+          const pred_log = JSON.parse(event.data);
+          
+          if (pred_log.error) {
+            console.error("Server error:", pred_log.error);
+            setIsProcessing(false);
+            return;
+          }
+          
+          // Update emotion bars
+          if (pred_log.predictions) {
+            document.getElementById("Angry").value = Math.round(pred_log.predictions.angry * 100);
+            document.getElementById("Neutral").value = Math.round(pred_log.predictions.neutral * 100);
+            document.getElementById("Happy").value = Math.round(pred_log.predictions.happy * 100);
+            document.getElementById("Fear").value = Math.round(pred_log.predictions.fear * 100);
+            document.getElementById("Surprise").value = Math.round(pred_log.predictions.surprise * 100);
+            document.getElementById("Sad").value = Math.round(pred_log.predictions.sad * 100);
+            document.getElementById("Disgust").value = Math.round(pred_log.predictions.disgust * 100);
+          }
 
-      requestAnimationFrame(()=>{drawMesh(face, pred_log, ctx)});
+          // Update detected emotion
+          if (pred_log.emotion) {
+            // Capitalize first letter for display
+            const formattedEmotion = pred_log.emotion.charAt(0).toUpperCase() + pred_log.emotion.slice(1);
+            setDetectedEmotion(formattedEmotion);
+            
+            // Also update the text input since it might be used elsewhere
+            const emotionTextElement = document.getElementById("emotion_text");
+            if (emotionTextElement) {
+              emotionTextElement.value = formattedEmotion;
+            }
+          }
+
+          // Store GradCAM data if available
+          if (pred_log.gradcam && pred_log.gradcam.superimposed) {
+            setGradcamImage(pred_log.gradcam.superimposed);
+            setExplanationText(pred_log.gradcam.explainability);
+            
+            // Automatically show explanation when image is uploaded
+            if (uploadedImage && !showExplanation) {
+              setShowExplanation(true);
+            }
+          }
+
+          // Get canvas context
+          const ctx = canvasRef.current.getContext("2d");
+          
+          // Draw uploaded image or video frame
+          if (uploadedImage && !showExplanation) {
+            const img = new Image();
+            img.src = uploadedImage;
+            ctx.drawImage(img, 0, 0, videoWidth, videoHeight);
+          }
+
+          requestAnimationFrame(() => {
+            drawMesh(face, pred_log, ctx);
+          });
+          
+          setIsProcessing(false);
+        } catch (error) {
+          console.error("Error processing message:", error);
+          setIsProcessing(false);
+        }
+      };
+      
+      socket.onclose = () => {
+        setIsProcessing(false);
+      };
+    } catch (error) {
+      console.error("Detection error:", error);
+      setIsProcessing(false);
     }
   };
 
-  useEffect(()=>{runFaceDetectorModel()}, [uploadedImage]);
+  useEffect(() => {
+    runFaceDetectorModel();
+  }, [uploadedImage]);
 
   return (
     <div className="App">
@@ -145,7 +232,7 @@ function EmotionRecognitionApp() {
       />
 
       {/* Uploaded Image Display */}
-      {uploadedImage && (
+      {uploadedImage && !showExplanation && (
         <img 
           src={uploadedImage} 
           alt="Uploaded" 
@@ -163,6 +250,60 @@ function EmotionRecognitionApp() {
             objectFit: 'cover'
           }}
         />
+      )}
+
+      {/* GradCAM Visualization */}
+      {showExplanation && gradcamImage && (
+        <div style={{
+          position: "absolute",
+          marginLeft: "auto",
+          marginRight: "auto",
+          left: 0,
+          right: 600,
+          top:20,
+          textAlign: "center",
+          zindex: 10,
+          width: 640,
+          height: 530,
+        }}>
+          <img 
+            src={gradcamImage} 
+            alt="GradCAM Visualization" 
+            style={{
+              width: 640,
+              height: 480,
+              objectFit: 'cover'
+            }}
+          />
+          <div style={{
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '8px',
+            borderRadius: '5px',
+          }}>
+            {explanationText}
+          </div>
+        </div>
+      )}
+
+      {/* Toggle Explanation Button */}
+      {gradcamImage && (
+        <button 
+          onClick={toggleExplanation}
+          style={{
+            position: "absolute",
+            bottom: 10,
+            left: 300,
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            padding: '10px 15px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          {showExplanation ? "Show Original Image" : "Show Explanation"}
+        </button>
       )}
 
       {/* Image Upload Input */}
@@ -183,6 +324,9 @@ function EmotionRecognitionApp() {
         <button 
           onClick={() => {
             setUploadedImage(null);
+            setGradcamImage(null);
+            setShowExplanation(false);
+            setDetectedEmotion("Neutral");
             if (fileInputRef.current) {
               fileInputRef.current.value = '';
             }
@@ -218,37 +362,37 @@ function EmotionRecognitionApp() {
           width:500,
           top: 60
         }}>
-          <label forhtml="Angry" style={{color:'red'}}>Angry </label>
-          <progress id="Angry" value="0" max = "100" >10%</progress>
+          <label htmlFor="Angry" style={{color:'red'}}>Angry </label>
+          <progress id="Angry" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Neutral" style={{color:'lightgreen'}}>Neutral </label>
-          <progress id="Neutral" value="0" max = "100">10%</progress>
+          <label htmlFor="Neutral" style={{color:'lightgreen'}}>Neutral </label>
+          <progress id="Neutral" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Happy" style={{color:'orange'}}>Happy </label>
-          <progress id="Happy" value="0" max = "100" >10%</progress>
+          <label htmlFor="Happy" style={{color:'orange'}}>Happy </label>
+          <progress id="Happy" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Fear" style={{color:'lightblue'}}>Fear </label>
-          <progress id="Fear" value="0" max = "100" >10%</progress>
+          <label htmlFor="Fear" style={{color:'lightblue'}}>Fear </label>
+          <progress id="Fear" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Surprise" style={{color:'yellow'}}>Surprised </label>
-          <progress id="Surprise" value="0" max = "100" >10%</progress>
+          <label htmlFor="Surprise" style={{color:'yellow'}}>Surprised </label>
+          <progress id="Surprise" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Sad" style={{color:'gray'}} >Sad </label>
-          <progress id="Sad" value="0" max = "100" >10%</progress>
+          <label htmlFor="Sad" style={{color:'gray'}}>Sad </label>
+          <progress id="Sad" value="0" max="100">10%</progress>
           <br></br>
           <br></br>
-          <label forhtml="Disgust" style={{color:'pink'}} >Disgusted </label>
-          <progress id="Disgust" value="0" max = "100" >10%</progress>
+          <label htmlFor="Disgust" style={{color:'pink'}}>Disgusted </label>
+          <progress id="Disgust" value="0" max="100">10%</progress>
         </div>
         <input 
           id="emotion_text" 
           name="emotion_text" 
-          value="Neutral"
+          value={detectedEmotion}
           readOnly
           style={{
             position:"absolute",
@@ -256,9 +400,9 @@ function EmotionRecognitionApp() {
             height:50,
             bottom:60,
             left:300,
-            "font-size": "30px",
+            fontSize: "30px",
           }}
-        ></input>
+        />
       </header>
     </div>
   );
